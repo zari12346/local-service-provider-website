@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>login</h2>
+
+<input type="email" id="email" placeholder="enter email"><br><br>
+<input type="password" id="password" placeholder="enter password"><br><br>
+
+<button onclick="loginuser()">login</button>
+
+<script>
+function loginuser() {
+    let email = document.getElementById("email").value;
+    let password = document.getElementById("password").value;
+
+    fetch("http://localhost/local-service/login.php", {
+        method: "POST",
+        headers: {
+            "content-type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            email: email,
+            password: password
+        })
+    })
+    .then(res => res.text())
+    .then(data => alert(data));
+}
+</script>
+<script>
+function loginUser() {
+
+    let email = document.getElementById("email").value;
+    let password = document.getElementById("password").value;
+
+    fetch("http://localhost/local-service/login.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            email: email,
+            password: password
+        })
+    })
+    .then(res => res.text())
+    .then(data => {
+        data = data.trim();
+
+        if(data === "success") {
+            window.location.href = "dashboard.html";
+        } else {
+            alert(data);
+        }
+    });
+}
+</script>
+</body>
+</html>

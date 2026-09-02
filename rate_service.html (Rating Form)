@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Your Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .rating-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .service-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .star {
+            font-size: 50px;
+            cursor: pointer;
+            color: #ddd;
+            transition: all 0.3s;
+        }
+        
+        .star:hover,
+        .star.active {
+            color: #ffc107;
+            transform: scale(1.1);
+        }
+        
+        .review-text {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            margin: 20px 0;
+        }
+        
+        .review-text:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.3s;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .rating-value {
+            font-size: 24px;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="rating-container">
+        <h1>⭐ Rate Your Service</h1>
+        <p>Your feedback helps us improve!</p>
+        
+        <div class="service-info" id="serviceInfo">
+            <i class="fas fa-spinner fa-pulse"></i> Loading booking details...
+        </div>
+        
+        <div class="rating-value" id="ratingValue">Select rating</div>
+        
+        <div class="stars" id="stars">
+            <span class="star" data-value="1">☆</span>
+            <span class="star" data-value="2">☆</span>
+            <span class="star" data-value="3">☆</span>
+            <span class="star" data-value="4">☆</span>
+            <span class="star" data-value="5">☆</span>
+        </div>
+        
+        <textarea class="review-text" id="reviewText" rows="4" placeholder="Share your experience... (Optional)"></textarea>
+        
+        <button class="btn-submit" id="submitBtn" onclick="submitReview()">📝 Submit Review</button>
+        
+        <a href="my_bookings.html" class="back-link">← Back to My Bookings</a>
+        
+        <div id="message"></div>
+    </div>
+    
+    <script>
+        // Get booking details from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = urlParams.get('booking_id');
+        const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('user_email');
+        
+        console.log('Booking ID:', bookingId);
+        console.log('User Email:', userEmail);
+        
+        if (!bookingId) {
+            document.getElementById('serviceInfo').innerHTML = '<p style="color:red;">❌ No booking ID found. <a href="my_bookings.html">Go back</a></p>';
+        }
+        
+        if (!userEmail) {
+            window.location.href = 'login.html';
+        }
+        
+        let selectedRating = 0;
+        
+        // Load booking details
+        async function loadBookingDetails() {
+            try {
+                console.log('Fetching booking details for ID:', bookingId);
+                const response = await fetch(`get_booking_details.php?id=${bookingId}`);
+                const data = await response.json();
+                
+                console.log('Response:', data);
+                
+                if (data.success) {
+                    document.getElementById('serviceInfo').innerHTML = `
+                        <p><i class="fas fa-tools"></i> <strong>Service:</strong> ${data.service_name}</p>
+                        <p><i class="fas fa-user-tie"></i> <strong>Provider:</strong> ${data.provider_name}</p>
+                        <p><i class="fas fa-calendar"></i> <strong>Date:</strong> ${data.booking_date || 'N/A'}</p>
+                        <p><i class="fas fa-hashtag"></i> <strong>Booking ID:</strong> #${data.id}</p>
+                    `;
+                } else {
+                    document.getElementById('serviceInfo').innerHTML = `
+                        <p style="color:red;">❌ ${data.error || 'Booking not found'}</p>
+                        <p><a href="my_bookings.html" style="color:#667eea;">← Go back to My Bookings</a></p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('serviceInfo').innerHTML = `
+                    <p style="color:red;">❌ Network error: ${error.message}</p>
+                    <p><a href="my_bookings.html" style="color:#667eea;">← Go back to My Bookings</a></p>
+                `;
+            }
+        }
+        
+        // Star rating system
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.value);
+                
+                // Update stars display
+                stars.forEach((s, index) => {
+                    if (index < selectedRating) {
+                        s.textContent = '★';
+                        s.classList.add('active');
+                    } else {
+                        s.textContent = '☆';
+                        s.classList.remove('active');
+                    }
+                });
+                
+                // Update rating text
+                const ratingText = document.getElementById('ratingValue');
+                if (selectedRating === 5) ratingText.innerHTML = 'Excellent! ⭐⭐⭐⭐⭐';
+                else if (selectedRating === 4) ratingText.innerHTML = 'Good! ⭐⭐⭐⭐';
+                else if (selectedRating === 3) ratingText.innerHTML = 'Average ⭐⭐⭐';
+                else if (selectedRating === 2) ratingText.innerHTML = 'Below Average ⭐⭐';
+                else if (selectedRating === 1) ratingText.innerHTML = 'Poor ⭐';
+            });
+        });
+        
+        // Submit review
+        async function submitReview() {
+            if (selectedRating === 0) {
+                showMessage('Please select a rating!', 'error');
+                return;
+            }
+            
+            const reviewText = document.getElementById('reviewText').value;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
+            
+            const data = {
+                booking_id: parseInt(bookingId),
+                rating: selectedRating,
+                review_text: reviewText,
+                user_email: userEmail
+            };
+            
+            console.log('Submitting:', data);
+            
+            try {
+                const response = await fetch('save_review.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                console.log('Response:', result);
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = 'my_bookings.html';
+                    }, 2000);
+                } else {
+                    showMessage(result.error, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '📝 Submit Review';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Network error! Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '📝 Submit Review';
+            }
+        }
+        
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+            messageDiv.className = `message ${type}`;
+            
+            setTimeout(() => {
+                messageDiv.className = 'message';
+            }, 3000);
+        }
+        
+        // Load page
+        loadBookingDetails();
+    </script>
+</body>
+</html>

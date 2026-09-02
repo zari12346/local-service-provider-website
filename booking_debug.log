@@ -1,0 +1,60 @@
+=== NEW BOOKING ===
+Service: Lighting Installation
+Provider: Qasim Ali
+Date: 20 May, 2026
+Time: 09:00
+Name: fatima
+Phone: 03076867988
+Email: fatima@gmail.com
+Address: village pindi bhago
+Area: Kingra
+SQL1: INSERT INTO bookings (service_name, provider_name, booking_date, booking_time, customer_name, phone, user_email, address, area, status) 
+         VALUES ('Lighting Installation', 'Qasim Ali', '2026-05-20', '09:00', 'fatima', '03076867988', 'fatima@gmail.com', 'village pindi bhago', 'Kingra', 'pending')
+Bookings table insert SUCCESS, ID: 58
+SQL2: INSERT INTO provider_bookings (provider_email, customer_name, customer_phone, customer_address, service_name, booking_date, booking_time, status, customer_email) 
+             VALUES ('qasim@gmail.com', 'fatima', '03076867988', 'village pindi bhago', 'Lighting Installation', '2026-05-20', '09:00', 'pending', 'fatima@gmail.com')
+Provider_bookings table insert SUCCESS
+2026-05-15 22:27:55 - POST: Array
+(
+    [service] => Lighting Installation
+    [provider] => Qasim Ali
+    [date] => 26 May, 2026
+    [time] => 10:00
+    [name] => fatima
+    [phone] => 03026327216
+    [email] => fatima@gmail.com
+    [address] => village pindi bhago
+    [area] => Kingra
+    [description] => 
+)
+
+service: Lighting Installation, provider: Qasim Ali, name: fatima, email: fatima@gmail.com
+SUCCESS for booking
+2026-05-15 22:33:22 - POST: Array
+(
+)
+
+service: , provider: , name: , email: 
+ERROR: Missing fields - service:, provider:, name:, email:
+2026-05-15 22:33:24 - POST: Array
+(
+)
+
+service: , provider: , name: , email: 
+ERROR: Missing fields - service:, provider:, name:, email:
+2026-05-16 07:38:49 - POST: Array
+(
+    [service] => Lighting Installation
+    [provider] => Qasim Ali
+    [date] => 28 May, 2026
+    [time] => 10:00
+    [name] => fatima
+    [phone] => 03026327216
+    [email] => fatima@gmail.com
+    [address] => village pindi bhago
+    [area] => Kingra
+    [description] => 
+)
+
+service: Lighting Installation, provider: Qasim Ali, name: fatima, email: fatima@gmail.com
+SUCCESS for booking

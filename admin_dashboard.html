@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Admin Console · Local Service Provider | Secure Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, 'Segoe UI', -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f0f4fa;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeSlideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            0% { opacity: 0; transform: translateX(30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(30, 109, 242, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(30, 109, 242, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(30, 109, 242, 0); }
+        }
+
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a1e3f 0%, #0B2B5E 100%);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 48px;
+            padding: 42px 36px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            animation: fadeSlideUp 0.5s ease-out;
+        }
+
+        .login-icon {
+            background: #1e6df2;
+            width: 80px;
+            height: 80px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2.8rem;
+            color: white;
+            box-shadow: 0 12px 18px rgba(30,109,242,0.3);
+        }
+
+        .login-card h2 { color: #0B2B5E; margin-bottom: 10px; font-weight: 700; }
+        .login-card p { color: #5a6e8a; margin-bottom: 28px; font-size: 0.9rem; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { font-weight: 600; color: #1e2f44; display: block; margin-bottom: 8px; font-size: 0.85rem; }
+        .input-group input {
+            width: 100%; padding: 14px 18px; border-radius: 28px; border: 1.5px solid #e2e8f0;
+            background: #fefefe; font-size: 1rem; transition: all 0.2s; outline: none;
+        }
+        .input-group input:focus { border-color: #1e6df2; box-shadow: 0 0 0 3px rgba(30,109,242,0.2); }
+        
+        /* Password container with toggle */
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+        .password-container input {
+            width: 100%;
+            padding-right: 50px;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #1e6df2;
+            font-size: 1.2rem;
+            background: transparent;
+            z-index: 10;
+        }
+        .toggle-password:hover {
+            color: #0f58d0;
+        }
+        
+        .login-btn {
+            background: #1e6df2; width: 100%; border: none; padding: 14px; border-radius: 40px;
+            font-weight: bold; font-size: 1rem; color: white; cursor: pointer; transition: all 0.2s; margin-top: 12px;
+        }
+        .login-btn:hover { background: #0f58d0; transform: translateY(-2px); }
+        .error-msg { color: #e03a3a; font-size: 0.8rem; margin-top: 15px; background: #ffe9e9; padding: 8px; border-radius: 30px; display: none; }
+
+        /* Dashboard */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 280px; background: linear-gradient(145deg, #0B2B5E 0%, #0A1E3F 100%);
+            color: white; position: fixed; height: 100vh; overflow-y: auto; transition: all 0.4s;
+            z-index: 1000; box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar-header { padding: 28px 20px 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+        .sidebar-header h2 { font-size: 1.6rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .sidebar-header h2 i { font-size: 1.7rem; color: #5f9eff; }
+        .sidebar-menu { padding: 16px 12px; }
+        .menu-item {
+            padding: 12px 18px; display: flex; align-items: center; gap: 14px; color: rgba(255,255,255,0.75);
+            cursor: pointer; transition: all 0.3s ease; margin: 6px 0; border-radius: 16px; font-weight: 500;
+        }
+        .menu-item:hover { background: #2a4b8c; color: white; transform: translateX(6px); }
+        .menu-item.active { background: #1e6df2; color: white; box-shadow: 0 6px 12px rgba(0, 100, 255, 0.25); }
+        .menu-item.logout { margin-top: 32px; color: #ffaeae; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px; }
+        .menu-item.logout:hover { background: #c7362b; color: white; }
+        .sidebar-close { display: none; position: absolute; top: 18px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.4rem; cursor: pointer; width: 34px; height: 34px; border-radius: 40px; align-items: center; justify-content: center; }
+        .main-content { flex: 1; margin-left: 280px; padding: 24px 28px; transition: margin 0.3s; }
+        .top-bar {
+            background: white; border-radius: 28px; padding: 14px 26px; display: flex;
+            justify-content: space-between; align-items: center; margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02); border: 1px solid #eef2f8;
+        }
+        .welcome-text h3 { color: #0B2B5E; font-weight: 700; }
+        .profile-badge { display: flex; align-items: center; gap: 18px; background: #f8faff; padding: 6px 18px 6px 12px; border-radius: 60px; }
+        .profile-badge img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid #1e6df2; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 24px; margin-bottom: 36px; }
+        .stat-card {
+            background: white; border-radius: 28px; padding: 22px 20px; display: flex;
+            justify-content: space-between; align-items: center; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e9edf2; transition: all 0.35s;
+        }
+        .stat-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 20px 30px -12px rgba(30, 109, 242, 0.25); }
+        .stat-info .number { font-size: 2.2rem; font-weight: 800; color: #0B2B5E; }
+        .stat-icon { width: 58px; height: 58px; background: linear-gradient(135deg, #1e6df2, #0a45b3); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.7rem; }
+        .card { background: white; border-radius: 28px; padding: 22px 24px; box-shadow: 0 5px 14px rgba(0, 0, 0, 0.02); border: 1px solid #eef2f8; margin-bottom: 28px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #eef2fc; flex-wrap: wrap; gap: 12px; }
+        .provider-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #edf2f9;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .provider-row:hover {
+            background: #fafcff;
+            padding-left: 12px;
+            border-radius: 20px;
+        }
+        
+        /* Rating Stars Styles */
+        .rating-stars {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fff3e0;
+            padding: 4px 12px;
+            border-radius: 40px;
+        }
+        .rating-stars i {
+            color: #ffc107;
+            font-size: 0.85rem;
+        }
+        .rating-stars span {
+            margin-left: 6px;
+            font-weight: 600;
+            color: #e68a00;
+        }
+        .rating-badge {
+            background: linear-gradient(135deg, #FF9800, #FF5722);
+            border-radius: 30px;
+            padding: 5px 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .no-rating {
+            background: #e2e8f0;
+            color: #64748b;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+        }
+        
+        .filter-chip { transition: all 0.2s; cursor: pointer; padding: 6px 16px; border-radius: 40px; background: #f0f2f5; display: inline-block; font-size: 0.8rem; }
+        .filter-chip.active { background: #1e6df2; color: white; }
+        .insight-slider { background: linear-gradient(135deg, #0B2B5E 0%, #103A6B 100%); border-radius: 32px; padding: 24px; color: white; margin-top: 20px; overflow: hidden; }
+        .slider-container { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide-item { min-width: 100%; padding: 20px; text-align: center; }
+        .slider-nav { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+        .slider-dot { width: 10px; height: 10px; background: rgba(255,255,255,0.4); border-radius: 10px; cursor: pointer; transition: all 0.3s; }
+        .slider-dot.active { width: 28px; background: #5f9eff; }
+        .mobile-menu-btn { display: none; background: white; border: none; font-size: 1.7rem; color: #1e6df2; cursor: pointer; margin-right: 12px; width: 42px; border-radius: 60px; }
+        .view-reviews-btn {
+            background: transparent;
+            border: 1px solid #1e6df2;
+            color: #1e6df2;
+            padding: 6px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: 0.2s;
+        }
+        .view-reviews-btn:hover {
+            background: #1e6df2;
+            color: white;
+        }
+        @media (max-width: 900px) { .sidebar { left: -300px; } .sidebar.open { left: 0; } .sidebar-close { display: flex; } .main-content { margin-left: 0; padding: 18px; } .mobile-menu-btn { display: inline-block; } }
+        @media (max-width: 550px) { .stats-grid { grid-template-columns: 1fr; } .provider-row { flex-direction: column; align-items: flex-start; } }
+        .empty-state { text-align: center; padding: 40px; color: #64748B; }
+        .btn-approve, .btn-reject { transition: 0.2s; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+        <div class="login-icon"><i class="fas fa-shield-alt"></i></div>
+        <h2>Admin Console</h2>
+        <p>Secure access · Local Service Provider</p>
+        <div class="input-group">
+            <label><i class="fas fa-envelope"></i> Email</label>
+            <input type="email" id="loginEmail" placeholder="admin@localservice.com" value="admin@localservice.com">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-lock"></i> Password</label>
+            <div class="password-container">
+                <input type="password" id="loginPassword" placeholder="••••••">
+                <span class="toggle-password" onclick="togglePassword()">
+                    <i class="far fa-eye" id="toggleIcon"></i>
+                </span>
+            </div>
+        </div>
+        <button class="login-btn" id="doLoginBtn"><i class="fas fa-key"></i> Login to Dashboard</button>
+        <div id="loginErrorMsg" class="error-msg"></div>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardApp" class="dashboard-container" style="display: none;">
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-close" id="sidebarCloseBtn"><i class="fas fa-times"></i></button>
+        <div class="sidebar-header">
+            <h2><i class="fas fa-crown"></i> LSP</h2>
+            <p>Admin Dashboard</p>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-item active" data-page="requests"><i class="fas fa-user-plus"></i> Join Requests</div>
+            <div class="menu-item" data-page="providers"><i class="fas fa-tools"></i> All Providers</div>
+            <div class="menu-item" data-page="insights"><i class="fas fa-chart-pie"></i> Insights & Slides</div>
+            <div class="menu-item logout" id="logoutDashboardBtn"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+            <div class="welcome-text"><h3>Admin Dashboard ✨</h3><p>Manage service providers & platform requests</p></div>
+            <div class="profile-badge">
+                <div><strong>Admin</strong><br><small>admin@localservice.com</small></div>
+                <img src="https://ui-avatars.com/api/?background=1E6DF2&color=fff&name=Admin" alt="Admin">
+            </div>
+        </div>
+
+        <div id="requestsPage">
+            <div class="stats-grid" id="requestStats">
+                <div class="stat-card"><div class="stat-info"><h4>Pending Approvals</h4><div class="number" id="pendingCount">0</div></div><div class="stat-icon"><i class="fas fa-clock"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><h4>Approved Providers</h4><div class="number" id="approvedCount">0</div></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><h4>Total Requests</h4><div class="number" id="totalReqCount">0</div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-handshake"></i> Service Provider Join Requests</h3>
+                    <div class="filter-buttons" id="requestFilterGroup">
+                        <span class="filter-chip active" data-req-filter="all">All</span>
+                        <span class="filter-chip" data-req-filter="pending">Pending</span>
+                        <span class="filter-chip" data-req-filter="approved">Approved</span>
+                        <span class="filter-chip" data-req-filter="rejected">Rejected</span>
+                    </div>
+                </div>
+                <div id="joinRequestsList"></div>
+            </div>
+        </div>
+
+        <div id="providersPage" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-briefcase"></i> Registered Service Providers</h3>
+                    <input type="text" id="searchProvider" placeholder="🔍 Search by name or service..." style="padding: 8px 16px; border-radius: 60px; border: 1px solid #dce3ec;">
+                </div>
+                <div id="providersListContainer"></div>
+            </div>
+        </div>
+
+        <div id="insightsPage" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-info"><h4>Total Providers</h4><div class="number" id="insightTotalProviders">0</div></div><div class="stat-icon"><i class="fas fa-chalkboard-user"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><h4>Approved Rate</h4><div class="number" id="insightApprovalRate">0%</div></div><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div>
+                <div class="stat-card"><div class="stat-info"><h4>Services Categories</h4><div class="number" id="serviceCategoriesCount">0</div></div><div class="stat-icon"><i class="fas fa-layer-group"></i></div></div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom: 16px;"><i class="fas fa-chart-simple"></i> Platform Growth & Highlights</h3>
+                <div style="background: #f8fafd; border-radius: 24px; padding: 24px; text-align: center;">
+                    <div style="margin-bottom: 16px;"><strong id="insightSummaryText">0 pending, 0 approved</strong></div>
+                    <div style="background:#e9f0fe; border-radius: 60px; height: 12px; width: 100%;"><div id="approvalProgressBar" style="height:12px; background:#1e6df2; width:0%; border-radius:60px;"></div></div>
+                </div>
+            </div>
+            <div class="insight-slider">
+                <div class="slider-container" id="sliderContainer">
+                    <div class="slide-item"><i class="fas fa-chalkboard-user" style="font-size: 2.5rem;"></i><h3 style="margin: 12px 0;">Active Providers</h3><p id="slideActiveCount">0 professionals</p><small>Trusted by community</small></div>
+                    <div class="slide-item"><i class="fas fa-star" style="font-size: 2.5rem; color: #ffd966;"></i><h3 style="margin: 12px 0;">Avg Provider Rating</h3><p>⭐ 4.85 / 5</p><small>Based on customer feedback</small></div>
+                    <div class="slide-item"><i class="fas fa-calendar-check" style="font-size: 2.5rem;"></i><h3 style="margin: 12px 0;">Completed Services</h3><p>1,240+ jobs</p><small>This quarter</small></div>
+                    <div class="slide-item"><i class="fas fa-handshake" style="font-size: 2.5rem;"></i><h3 style="margin: 12px 0;">Join Requests Trend</h3><p id="slideTrendMsg">Loading...</p><small>New providers joining daily</small></div>
+                </div>
+                <div class="slider-nav" id="sliderNav"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Password Toggle Function for Login
+    function togglePassword() {
+        const passwordInput = document.getElementById('loginPassword');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+
+    let providerRequests = [];
+    let providerRatings = {}; // Store ratings for each provider
+    let currentRequestFilter = "all";
+    let currentSlide = 0;
+    let slideInterval;
+
+    // ========== FETCH PROVIDER RATINGS ==========
+    function loadProviderRatings() {
+        return fetch("http://localhost/local-service/get_all_provider_ratings.php")
+            .then(res => res.json())
+            .then(data => {
+                if (!data.error) {
+                    providerRatings = {};
+                    data.forEach(provider => {
+                        providerRatings[provider.provider_email] = {
+                            average_rating: provider.average_rating,
+                            total_reviews: provider.total_reviews
+                        };
+                    });
+                }
+                return providerRatings;
+            })
+            .catch(err => {
+                console.log("Ratings fetch error:", err);
+                return {};
+            });
+    }
+
+    // ========== DATABASE SE DATA FETCH ==========
+    function loadProvidersFromDB() {
+        Promise.all([
+            fetch("http://localhost/local-service/get_providers.php").then(res => res.json()),
+            loadProviderRatings()
+        ]).then(([providersData, ratings]) => {
+            if(providersData.error) {
+                console.log("Error:", providersData.error);
+                return;
+            }
+            providerRequests = providersData;
+            updateRequestStats();
+            renderJoinRequests();
+            renderAllProviders();
+        })
+        .catch(err => console.log("Fetch Error:", err));
+    }
+
+    function loadStatsFromDB() {
+        fetch("http://localhost/local-service/admin_stats.php")
+        .then(res => res.json())
+        .then(data => {
+            if(!data.error) {
+                document.getElementById('pendingCount').innerText = data.pending || 0;
+                document.getElementById('approvedCount').innerText = data.approved || 0;
+                document.getElementById('totalReqCount').innerText = data.total || 0;
+                document.getElementById('insightTotalProviders').innerText = data.approved || 0;
+                const approvalRate = data.total > 0 ? Math.round((data.approved / data.total) * 100) : 0;
+                document.getElementById('insightApprovalRate').innerText = approvalRate + '%';
+                document.getElementById('insightSummaryText').innerHTML = (data.pending || 0) + ' pending, ' + (data.approved || 0) + ' active providers';
+                document.getElementById('approvalProgressBar').style.width = approvalRate + '%';
+                document.getElementById('slideActiveCount').innerText = (data.approved || 0) + ' professionals';
+                const trendMsg = (data.pending || 0) > 3 ? "🔥 High demand! +35% requests" : "📈 Steady growth";
+                document.getElementById('slideTrendMsg').innerText = trendMsg;
+            }
+        })
+        .catch(err => console.log("Stats Error:", err));
+    }
+
+    function updateRequestStats() {
+        loadStatsFromDB();
+        const uniqueServices = [...new Set(providerRequests.map(p => p.service))];
+        document.getElementById('serviceCategoriesCount').innerText = uniqueServices.length;
+    }
+
+    // Function to get rating HTML for a provider
+    function getRatingHTML(providerEmail) {
+        const rating = providerRatings[providerEmail];
+        if (rating && rating.total_reviews > 0) {
+            const avg = parseFloat(rating.average_rating).toFixed(1);
+            const fullStars = Math.floor(avg);
+            const halfStar = avg % 1 >= 0.5 ? 1 : 0;
+            const emptyStars = 5 - fullStars - halfStar;
+            
+            let starsHtml = '';
+            for(let i = 0; i < fullStars; i++) starsHtml += '<i class="fas fa-star"></i>';
+            if(halfStar) starsHtml += '<i class="fas fa-star-half-alt"></i>';
+            for(let i = 0; i < emptyStars; i++) starsHtml += '<i class="far fa-star"></i>';
+            
+            return `
+                <div class="rating-stars">
+                    ${starsHtml}
+                    <span>${avg}</span>
+                </div>
+                <small style="color:#666; margin-left:8px;">(${rating.total_reviews} reviews)</small>
+            `;
+        } else {
+            return `<span class="no-rating"><i class="far fa-star"></i> No ratings yet</span>`;
+        }
+    }
+
+    function renderJoinRequests() {
+        let filtered = [...providerRequests];
+        if (currentRequestFilter !== "all") filtered = filtered.filter(req => req.status === currentRequestFilter);
+        const container = document.getElementById('joinRequestsList');
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="empty-state">✨ No requests found</div>`;
+            return;
+        }
+        container.innerHTML = filtered.map((req, idx) => `
+            <div class="provider-row" style="--row-index: ${idx+1};">
+                <div class="provider-info" style="flex:2;">
+                    <div class="provider-name"><i class="fas fa-user-circle"></i> ${req.name}</div>
+                    <div class="provider-detail">${req.service} • ${req.experience} • 📞 ${req.phone} • 📧 ${req.email}</div>
+                    <div class="provider-detail">Requested: ${req.requested_date || 'N/A'}</div>
+                    ${req.status === 'approved' ? `<div class="provider-detail" style="margin-top:8px;">⭐ Rating: ${getRatingHTML(req.email)}</div>` : ''}
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <span style="background: ${req.status === 'pending' ? '#ffedd5' : req.status === 'approved' ? '#dff0e6' : '#ffe6e5'}; padding:5px 14px; border-radius:40px;">${req.status.toUpperCase()}</span>
+                    ${req.status === "pending" ? `<div><button class="btn-approve" style="background:#1e6df2; color:white; border:none; padding:8px 20px; border-radius:40px; cursor:pointer;" onclick="approveRequest(${req.id})"><i class="fas fa-check"></i> Approve</button>
+                    <button class="btn-reject" style="background:#f3f3f3; color:#a12; border:1px solid #ffcdcd; padding:8px 20px; border-radius:40px; margin-left:8px; cursor:pointer;" onclick="rejectRequest(${req.id})"><i class="fas fa-times"></i> Reject</button></div>` : req.status === "rejected" ? `<span>⚠️ Rejected</span>` : 
+                    `<div><span style="color:#1f7840;"><i class="fas fa-check-circle"></i> Active</span>
+                     <button class="view-reviews-btn" onclick="viewProviderReviews('${req.email}', '${req.name}')"><i class="fas fa-star"></i> View Reviews</button></div>`}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.approveRequest = function(id) {
+        Swal.fire({ title: 'Approve Provider?', text: 'This provider will be activated.', icon: 'question', showCancelButton: true, confirmButtonColor: '#1e6df2', confirmButtonText: 'Yes, Approve' }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("http://localhost/local-service/update_provider_status.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({ id: id, status: "approved" })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        loadProvidersFromDB();
+                        Swal.fire('Approved!', 'Provider activated.', 'success');
+                    } else {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    }
+                });
+            }
+        });
+    };
+
+    window.rejectRequest = function(id) {
+        Swal.fire({ title: 'Reject Request', input: 'text', inputPlaceholder: 'Reason (optional)', showCancelButton: true, confirmButtonText: 'Reject', confirmButtonColor: '#d33' }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("http://localhost/local-service/update_provider_status.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({ id: id, status: "rejected", reason: result.value || "" })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        loadProvidersFromDB();
+                        Swal.fire('Rejected', 'Request rejected.', 'error');
+                    }
+                });
+            }
+        });
+    };
+
+    window.viewProviderReviews = function(providerEmail, providerName) {
+        Swal.fire({
+            title: `${providerName}'s Reviews`,
+            width: '600px',
+            html: '<div id="reviewsModalContent" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> Loading reviews...</div>',
+            showCloseButton: true,
+            showConfirmButton: false
+        });
+        
+        fetch(`http://localhost/local-service/get_provider_reviews.php?provider_email=${providerEmail}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.reviews && data.reviews.length > 0) {
+                    let reviewsHtml = `<div style="max-height:400px; overflow-y:auto;">
+                        <div style="text-align:center; margin-bottom:20px;">
+                            <div style="font-size:32px; color:#ffc107;">${'★'.repeat(Math.floor(data.average_rating))}${'☆'.repeat(5-Math.floor(data.average_rating))}</div>
+                            <div><strong>${data.average_rating} / 5</strong> (${data.total_reviews} reviews)</div>
+                        </div>`;
+                    
+                    data.reviews.forEach(review => {
+                        reviewsHtml += `
+                            <div style="border-bottom:1px solid #eee; padding:12px 0;">
+                                <div style="color:#ffc107; margin-bottom:5px;">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
+                                <div style="color:#333;">"${escapeHtml(review.review_text || 'No comment')}"</div>
+                                <div style="font-size:12px; color:#999; margin-top:8px;">
+                                    <i class="fas fa-user"></i> ${escapeHtml(review.customer_name || review.user_email)} • 
+                                    <i class="fas fa-calendar"></i> ${review.created_at}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    reviewsHtml += `</div>`;
+                    document.getElementById('reviewsModalContent').innerHTML = reviewsHtml;
+                } else {
+                    document.getElementById('reviewsModalContent').innerHTML = `
+                        <div style="text-align:center; padding:40px;">
+                            <i class="fas fa-star" style="font-size:48px; color:#ddd;"></i>
+                            <p style="margin-top:15px;">No reviews yet for ${escapeHtml(providerName)}</p>
+                            <small>Reviews will appear here when customers rate this provider</small>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                document.getElementById('reviewsModalContent').innerHTML = '<div style="color:red;">Error loading reviews. Please try again.</div>';
+            });
+    };
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function renderAllProviders(search = "") {
+        const approved = providerRequests.filter(p => p.status === "approved");
+        let filtered = approved;
+        if (search) filtered = approved.filter(p => p.name.toLowerCase().includes(search) || p.service.toLowerCase().includes(search));
+        const container = document.getElementById('providersListContainer');
+        if (!filtered.length) { container.innerHTML = `<div class="empty-state">No active providers found.</div>`; return; }
+        container.innerHTML = filtered.map((p, idx) => `
+            <div class="provider-row">
+                <div class="provider-info" style="flex:2;">
+                    <div class="provider-name"><i class="fas fa-hard-hat"></i> ${p.name}</div>
+                    <div class="provider-detail"><strong>${p.service}</strong> • ${p.experience} • ${p.phone}</div>
+                    <div class="provider-detail">📧 ${p.email} • Joined: ${p.requested_date || 'N/A'}</div>
+                    <div class="provider-detail" style="margin-top:8px;">⭐ Rating: ${getRatingHTML(p.email)}</div>
+                </div>
+                <div>
+                    <span style="background:#e2f3e4; padding:4px 14px; border-radius:40px;"><i class="fas fa-check"></i> Active</span>
+                    <button class="view-reviews-btn" style="margin-left:10px;" onclick="viewProviderReviews('${p.email}', '${p.name}')"><i class="fas fa-star"></i> Reviews</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function initSlider() {
+        const container = document.getElementById('sliderContainer');
+        const nav = document.getElementById('sliderNav');
+        const totalSlides = document.querySelectorAll('.slide-item').length;
+        if (!nav) return;
+        nav.innerHTML = '';
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('slider-dot');
+            if (i === currentSlide) dot.classList.add('active');
+            dot.addEventListener('click', () => { goToSlide(i); resetAutoSlide(); });
+            nav.appendChild(dot);
+        }
+        function goToSlide(index) { currentSlide = index; if(container) container.style.transform = `translateX(-${currentSlide * 100}%)`; document.querySelectorAll('.slider-dot').forEach((d, idx) => { if(idx === currentSlide) d.classList.add('active'); else d.classList.remove('active'); }); }
+        window.goToSlide = goToSlide;
+        function nextSlide() { currentSlide = (currentSlide + 1) % totalSlides; goToSlide(currentSlide); }
+        function resetAutoSlide() { if(slideInterval) clearInterval(slideInterval); slideInterval = setInterval(nextSlide, 4500); }
+        goToSlide(0);
+        resetAutoSlide();
+    }
+
+    function switchPage(page) {
+        document.querySelectorAll('#requestsPage, #providersPage, #insightsPage').forEach(p => { if(p) p.style.display = 'none'; });
+        if (page === 'requests') { document.getElementById('requestsPage').style.display = 'block'; loadProvidersFromDB(); }
+        if (page === 'providers') { document.getElementById('providersPage').style.display = 'block'; renderAllProviders(document.getElementById('searchProvider')?.value || ''); }
+        if (page === 'insights') { document.getElementById('insightsPage').style.display = 'block'; loadStatsFromDB(); if (typeof initSlider === 'function') initSlider(); }
+        document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+        document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
+    }
+
+    // ========== LOGIN AUTHENTICATION ==========
+    function checkAuth() {
+        fetch("http://localhost/local-service/check_admin_session.php")
+        .then(res => res.json())
+        .then(data => {
+            if(data.logged_in) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('dashboardApp').style.display = 'flex';
+                initializeDashboard();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('dashboardApp').style.display = 'none';
+            }
+        })
+        .catch(() => {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('dashboardApp').style.display = 'none';
+        });
+    }
+
+    function login() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginErrorMsg');
+
+        fetch("http://localhost/local-service/admin_login.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ email: email, password: password })
+        })
+        .then(res => res.text())
+        .then(data => {
+            if(data === "success") {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('dashboardApp').style.display = 'flex';
+                initializeDashboard();
+            } else {
+                errorDiv.innerText = "Invalid email or password";
+                errorDiv.style.display = "block";
+            }
+        })
+        .catch(err => {
+            errorDiv.innerText = "Network error. Please try again.";
+            errorDiv.style.display = "block";
+        });
+    }
+
+    function logout() {
+        fetch("http://localhost/local-service/admin_logout.php")
+        .then(() => {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('dashboardApp').style.display = 'none';
+        });
+    }
+
+    function initializeDashboard() {
+        loadProvidersFromDB();
+        loadStatsFromDB();
+        switchPage('requests');
+        
+        document.querySelectorAll('.menu-item[data-page]').forEach(item => {
+            item.removeEventListener('click', pageHandler);
+            item.addEventListener('click', pageHandler);
+        });
+        function pageHandler(e) { switchPage(this.dataset.page); }
+        
+        document.getElementById('searchProvider')?.addEventListener('input', (e) => renderAllProviders(e.target.value));
+        document.querySelectorAll('#requestFilterGroup .filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('#requestFilterGroup .filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentRequestFilter = chip.getAttribute('data-req-filter');
+                renderJoinRequests();
+            });
+        });
+        
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const sideBar = document.getElementById('sidebar');
+        const closeSide = document.getElementById('sidebarCloseBtn');
+        if(mobileBtn) mobileBtn.onclick = () => sideBar.classList.add('open');
+        if(closeSide) closeSide.onclick = () => sideBar.classList.remove('open');
+    }
+
+    // Event Listeners
+    document.getElementById('doLoginBtn').addEventListener('click', login);
+    document.getElementById('loginPassword').addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
+    document.getElementById('logoutDashboardBtn')?.addEventListener('click', () => {
+        Swal.fire({ title: 'Logout?', text: 'You will be redirected to login.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Logout' }).then((res) => {
+            if(res.isConfirmed) logout();
+        });
+    });
+
+    // Initialize
+    checkAuth();
+</script>
+</body>
+</html>

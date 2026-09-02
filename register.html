@@ -1,0 +1,26 @@
+<h2>Register</h2>
+
+<input type="text" id="name" placeholder="Enter Name"><br><br>
+<input type="email" id="email" placeholder="Enter Email"><br><br>
+<input type="password" id="password" placeholder="Enter Password"><br><br>
+
+<button onclick="registerUser()">Register</button>
+
+<script>
+function registerUser() {
+  let name = document.getElementById("name").value;
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+
+  fetch("http://localhost/local-service/register.php", {
+    method: "POST",
+    body: new URLSearchParams({
+      name: name,
+      email: email,
+      password: password
+    })
+  })
+  .then(res => res.text())
+  .then(data => alert(data));
+}
+</script>

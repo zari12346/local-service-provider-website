@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Booking · LSP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .booking-card { max-width: 650px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; }
+        .booking-header { background: linear-gradient(135deg, #3366FF, #1A2E55); padding: 25px 20px; text-align: center; color: white; position: relative; }
+        .back-arrow { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; }
+        .booking-content { padding: 25px; }
+        .services-section, .area-section, .providers-section { background: #F8FAFF; border-radius: 20px; padding: 15px; margin-bottom: 20px; border: 1px solid #E8ECF0; }
+        .providers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; }
+        .provider-card { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); cursor: pointer; transition: all 0.3s; }
+        .provider-card:hover { transform: translateY(-5px); box-shadow: 0 15px 25px rgba(51,102,255,0.15); }
+        .selected-provider-bar { background: #E8F0FF; border-radius: 15px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-left: 5px solid #3366FF; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #1A2E55; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #E8ECF0; border-radius: 14px; font-size: 0.95rem; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #3366FF; box-shadow: 0 0 0 3px rgba(51,102,255,0.1); }
+        .time-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+        .time-slot { padding: 10px 8px; text-align: center; background: #F5F9FF; border-radius: 10px; cursor: pointer; font-size: 0.9rem; border: 1px solid #E8ECF0; }
+        .time-slot:hover { background: #3366FF; color: white; }
+        .time-slot.selected { background: #3366FF; color: white; border-color: #3366FF; }
+        .confirm-btn { width: 100%; background: linear-gradient(135deg, #3366FF, #1A2E55); color: white; border: none; padding: 14px; border-radius: 40px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .confirm-btn:hover { transform: translateY(-2px); }
+        .confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .form-control-custom { width: 100%; padding: 12px 15px; border: 2px solid #E8ECF0; border-radius: 14px; font-size: 0.95rem; background: white; }
+        .form-control-custom:focus { border-color: #3366FF; outline: none; box-shadow: 0 0 0 3px rgba(51,102,255,0.1); }
+        .empty-state { text-align: center; padding: 20px; color: #64748B; }
+    </style>
+</head>
+<body>
+
+<div class="booking-card">
+    <div class="booking-header">
+        <a href="javascript:void(0)" class="back-arrow" id="backArrowBtn"><i class="fas fa-arrow-left"></i></a>
+        <h2><i class="fas fa-calendar-check"></i> Complete Booking</h2>
+        <p>Confirm your service details</p>
+    </div>
+
+    <div class="booking-content">
+        <div class="services-section">
+            <h3><i class="fas fa-tools"></i> Selected Services <span id="serviceCount">(0)</span></h3>
+            <div id="selectedServicesList"></div>
+        </div>
+
+        <div class="area-section">
+            <h3><i class="fas fa-map-marker-alt"></i> Select Your Area in Sialkot</h3>
+            <select id="areaInput" class="form-control-custom">
+                <option value="">Select Area</option>
+                <option value="Kingra">Kingra</option>
+                <option value="Pindi Bhago">Pindi Bhago</option>
+                <option value="sabzpeer">sabzpeer</option>
+                <option value="charwa">charwa</option>
+                <option value="mirza pur">mirza pur</option>
+                <option value="chobara">chobara</option>
+                <option value="merajky">merajky</option>
+                <option value="chakaraiya">chakaraiya</option>
+            </select>
+        </div>
+
+        <div id="providersSection" class="providers-section" style="display:none;">
+            <h3><i class="fas fa-users"></i> Nearest <span id="categoryName"></span> in <span id="selectedAreaName"></span></h3>
+            <div id="providersGrid" class="providers-grid"></div>
+        </div>
+
+        <div id="selectedProviderSection" class="selected-provider-bar" style="display:none;">
+            <div><strong><i class="fas fa-check-circle"></i> Selected Provider: </strong> <span id="selectedProviderName"></span></div>
+            <button id="changeProviderBtn">Change</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group"><label><i class="fas fa-calendar-alt"></i> Date</label><input type="text" id="datePicker" class="form-control-custom" placeholder="Select date"></div>
+            <div class="form-group"><label><i class="fas fa-clock"></i> Time</label>
+                <div class="time-slots" id="timeSlots">
+                    <div class="time-slot" data-time="09:00">9 AM</div>
+                    <div class="time-slot" data-time="10:00">10 AM</div>
+                    <div class="time-slot" data-time="11:00">11 AM</div>
+                    <div class="time-slot" data-time="12:00">12 PM</div>
+                    <div class="time-slot" data-time="14:00">2 PM</div>
+                    <div class="time-slot" data-time="16:00">4 PM</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group"><label><i class="fas fa-user"></i> Full Name</label><input type="text" id="customerName" class="form-control-custom" placeholder="Enter your name"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group"><label><i class="fas fa-phone"></i> Phone</label><input type="tel" id="customerPhone" class="form-control-custom" placeholder="Phone number"></div>
+            <div class="form-group"><label><i class="fas fa-envelope"></i> Email</label><input type="email" id="customerEmail" class="form-control-custom" placeholder="example@email.com"></div>
+        </div>
+        <div class="form-group"><label><i class="fas fa-map-marker-alt"></i> Full Address</label><textarea id="customerAddress" class="form-control-custom" rows="2" placeholder="Complete address with area"></textarea></div>
+        
+        <div class="form-group">
+            <label><i class="fas fa-info-circle"></i> Description (Optional)</label>
+            <textarea id="description" class="form-control-custom" rows="2" placeholder="Any special instructions or requirements?"></textarea>
+        </div>
+        
+        <button class="confirm-btn" id="confirmBtn" disabled><i class="fas fa-check-circle"></i> Confirm Booking</button>
+    </div>
+</div>
+
+<script>
+    // Pre-fill email from URL param if passed (set by dashboard for logged-in users)
+    window.addEventListener('load', function() {
+        const urlP = new URLSearchParams(window.location.search);
+        const preEmail = urlP.get('email');
+        if (preEmail) {
+            const emailField = document.getElementById('customerEmail');
+            if (emailField) emailField.value = preEmail;
+        }
+        // Get category from URL or localStorage
+        const urlCat = urlP.get('category');
+        if (urlCat) {
+            localStorage.setItem('bookingCategory', urlCat);
+            localStorage.setItem('selectedCategory', urlCat);
+        }
+        loadSelectedServices();
+        setupPage();
+    });
+    let selectedServices = [];
+    let selectedProvider = null;
+    let selectedDate = null;
+    let selectedTime = null;
+    let currentCategory = "Service";
+
+    // DEMO PROVIDERS (Fallback - agar database se na aaye to)
+    const demoProviders = {
+        "Plumbing": [
+            { id: 1, name: "Ahmed Ali Plumbing", rating: 4.9, experience: "12 years", phone: "0300-5551234", service: "Plumber", area: "Kingra" },
+            { id: 2, name: "Hassan Tech Plumbers", rating: 4.7, experience: "8 years", phone: "0311-9876543", service: "Plumber", area: "Sialkot City" },
+            { id: 3, name: "Sialkot Plumbers Hub", rating: 4.8, experience: "10 years", phone: "0321-4455667", service: "Plumber", area: "Satellite Town" }
+        ],
+        "Electrical": [
+            { id: 4, name: "Zahid Electric Works", rating: 4.9, experience: "15 years", phone: "0300-9988776", service: "Electration", area: "Kingra" },
+            { id: 5, name: "Qasim Ali", rating: 4.8, experience: "9 years", phone: "0322-6677889", service: "Electration", area: "Kingra" },
+            { id: 6, name: "Bright Spark Services", rating: 4.7, experience: "11 years", phone: "0300-2233445", service: "Electration", area: "Sialkot City" }
+        ],
+        "Carpentry": [
+            { id: 7, name: "Master Wood Works", rating: 4.8, experience: "11 years", phone: "0311-3344556", service: "Carpenter", area: "Kingra" },
+            { id: 8, name: "Expert Carpenter Sialkot", rating: 4.9, experience: "13 years", phone: "0322-6677889", service: "Carpenter", area: "Model Town" }
+        ],
+        "Mechanic": [
+            { id: 9, name: "Quick Auto Repair", rating: 4.9, experience: "14 years", phone: "0321-7788990", service: "Mechanic", area: "Kingra" },
+            { id: 10, name: "Sialkot Car Care", rating: 4.8, experience: "10 years", phone: "0300-4455667", service: "Mechanic", area: "Cantt" }
+        ]
+    };
+
+    function getCategoryFromPreviousPage() {
+        return localStorage.getItem('bookingCategory') || localStorage.getItem('selectedCategory') || 'Plumbing';
+    }
+
+    function loadSelectedServices() {
+        const saved = localStorage.getItem('selectedServices');
+        if (saved) selectedServices = JSON.parse(saved);
+        renderSelectedServices();
+    }
+
+    function renderSelectedServices() {
+        const container = document.getElementById('selectedServicesList');
+        const count = document.getElementById('serviceCount');
+        if (selectedServices.length === 0) {
+            container.innerHTML = '<div class="empty-state">No services selected</div>';
+            count.innerText = '(0)';
+            return;
+        }
+        count.innerText = '(' + selectedServices.length + ')';
+        let html = '';
+        for(let i = 0; i < selectedServices.length; i++) {
+            html += '<div style="background:white;padding:10px 12px;border-radius:12px;margin-bottom:8px;border-left:4px solid #3366FF;"><strong>' + selectedServices[i].name + '</strong></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    // ✅ FIXED renderProviders function
+    function renderProviders(category, area) {
+        console.log("renderProviders called with:", category, area);
+        
+        let serviceName = category;
+        if(category === "Plumbing") serviceName = "Plumber";
+        if(category === "Electrical") serviceName = "Electration";
+        if(category === "Carpentry") serviceName = "Carpenter";
+        if(category === "Mechanic") serviceName = "Mechanic";
+        
+        const grid = document.getElementById('providersGrid');
+        if(!grid) {
+            console.log("providersGrid not found!");
+            return;
+        }
+        
+        grid.innerHTML = '<div class="empty-state">Loading providers...</div>';
+        
+        let url = "get_providers_by_category_and_area.php?category=" + encodeURIComponent(serviceName);
+        if(area && area !== "") {
+            url += "&area=" + encodeURIComponent(area);
+        }
+        
+        console.log("Fetching URL:", url);
+        
+        fetch(url)
+        .then(res => {
+            if(!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(data => {
+            console.log("API Response data:", data);
+            
+            if(data && data.length > 0) {
+                // Database se providers aaye
+                let html = '';
+                for(let i = 0; i < data.length; i++) {
+                    let p = data[i];
+                    html += '<div class="provider-card" onclick="selectProvider(' + p.id + ', \'' + category + '\', \'' + (p.name || 'Unknown') + '\', \'' + (p.rating || '4.5') + '\', \'' + (p.experience || 'N/A') + '\', \'' + (p.phone || 'N/A') + '\')">' +
+                                '<div style="display:flex;justify-content:space-between;">' +
+                                    '<h5>' + (p.name || 'Unknown') + '</h5>' +
+                                    '<span style="color:#FFD700;">' + (p.rating || '4.5') + ' ⭐</span>' +
+                                '</div>' +
+                                '<p style="margin:5px 0;font-size:0.85rem;">' + (p.experience || 'N/A') + ' experience • ' + (p.phone || 'N/A') + '</p>' +
+                                '<small style="color:#3366FF;">📍 ' + (p.area || area) + '</small>' +
+                            '</div>';
+                }
+                grid.innerHTML = html;
+                document.getElementById('categoryName').textContent = category;
+                document.getElementById('selectedAreaName').textContent = area;
+                document.getElementById('providersSection').style.display = 'block';
+            } else {
+                // Database se na aaye to demo providers use karo
+                console.log("No providers in database, using demo providers for:", category, area);
+                let demoList = demoProviders[category] || demoProviders["Plumbing"];
+                let filteredByArea = demoList.filter(p => p.area === area);
+                if(filteredByArea.length === 0) {
+                    filteredByArea = demoList;
+                }
+                
+                if(filteredByArea.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No providers found in ' + category + ' for ' + area + '.<br>Try another area.</div>';
+                } else {
+                    let html = '';
+                    for(let i = 0; i < filteredByArea.length; i++) {
+                        let p = filteredByArea[i];
+                        html += '<div class="provider-card" onclick="selectProvider(' + p.id + ', \'' + category + '\', \'' + p.name + '\', \'' + p.rating + '\', \'' + p.experience + '\', \'' + p.phone + '\')">' +
+                                    '<div style="display:flex;justify-content:space-between;">' +
+                                        '<h5>' + p.name + '</h5>' +
+                                        '<span style="color:#FFD700;">' + p.rating + ' ⭐</span>' +
+                                    '</div>' +
+                                    '<p style="margin:5px 0;font-size:0.85rem;">' + p.experience + ' experience • ' + p.phone + '</p>' +
+                                    '<small style="color:#3366FF;">📍 ' + (p.area || area) + '</small>' +
+                                '</div>';
+                    }
+                    grid.innerHTML = html;
+                    document.getElementById('categoryName').textContent = category;
+                    document.getElementById('selectedAreaName').textContent = area;
+                    document.getElementById('providersSection').style.display = 'block';
+                }
+            }
+        })
+        .catch(err => {
+            console.log("Fetch error:", err);
+            grid.innerHTML = '<div class="empty-state">Error loading providers. Please try again.</div>';
+        });
+    }
+
+    // ✅ FIXED selectProvider function
+    window.selectProvider = function(id, category, name, rating, experience, phone) {
+        console.log("selectProvider called:", {id, category, name, rating, experience, phone});
+        
+        selectedProvider = {
+            id: id,
+            name: name,
+            rating: rating,
+            experience: experience,
+            phone: phone,
+            service: category
+        };
+        
+        const providersSection = document.getElementById('providersSection');
+        if(providersSection) providersSection.style.display = 'none';
+        
+        const selectedProviderName = document.getElementById('selectedProviderName');
+        if(selectedProviderName) {
+            selectedProviderName.innerHTML = name + ' <small>(' + rating + '⭐)</small>';
+        }
+        
+        const selectedProviderSection = document.getElementById('selectedProviderSection');
+        if(selectedProviderSection) selectedProviderSection.style.display = 'flex';
+        
+        updateConfirmButton();
+    };
+
+    function initDatePicker() {
+        flatpickr("#datePicker", {
+            minDate: "today",
+            dateFormat: "d M, Y",
+            onChange: function(d, str) { selectedDate = str; updateConfirmButton(); }
+        });
+    }
+
+    function initTimeSlots() {
+        let slots = document.querySelectorAll('.time-slot');
+        for(let i = 0; i < slots.length; i++) {
+            slots[i].addEventListener('click', function() {
+                for(let j = 0; j < slots.length; j++) { slots[j].classList.remove('selected'); }
+                this.classList.add('selected');
+                selectedTime = this.dataset.time;
+                updateConfirmButton();
+            });
+        }
+    }
+
+    function updateConfirmButton() {
+        let valid = selectedServices.length > 0 && selectedDate && selectedTime && selectedProvider &&
+                    document.getElementById('customerName').value.trim() &&
+                    document.getElementById('customerPhone').value.trim() &&
+                    document.getElementById('customerEmail').value.trim().includes('@') &&
+                    document.getElementById('customerAddress').value.trim();
+        document.getElementById('confirmBtn').disabled = !valid;
+    }
+
+    function downloadPDF(bookingDetails) {
+        let servicesHtml = '';
+        for(let i = 0; i < bookingDetails.services.length; i++) {
+            servicesHtml += '<li style="margin:5px 0;">• ' + bookingDetails.services[i].name + '</li>';
+        }
+        
+        const element = document.createElement('div');
+        element.style.cssText = 'padding:40px; font-family:Segoe UI,Arial,sans-serif; max-width:700px; margin:auto; background:white;';
+        element.innerHTML = `
+            <div style="text-align:center;margin-bottom:30px;"><h1 style="color:#3366FF;margin:0;">LocalConnect</h1><p style="color:#555;">Sialkot's Trusted Service Partner</p></div>
+            <h2 style="color:#1A2E55;">Service Booking Confirmation</h2>
+            <p><strong>Booking ID:</strong> ${bookingDetails.bookingId}</p>
+            <p><strong>Date & Time:</strong> ${bookingDetails.date} at ${bookingDetails.time}</p>
+            <p><strong>Category:</strong> ${bookingDetails.category}</p>
+            <hr style="margin:15px 0;">
+            <h3>Selected Services</h3><ul>${servicesHtml}</ul>
+            <h3>Selected Provider</h3>
+            <p><strong>${bookingDetails.provider.name}</strong> (${bookingDetails.provider.rating}⭐)</p>
+            <p><strong>Experience:</strong> ${bookingDetails.provider.experience}</p>
+            <p><strong>Phone:</strong> ${bookingDetails.provider.phone}</p>
+            <hr style="margin:15px 0;">
+            <h3>Customer Details</h3>
+            <p><strong>Name:</strong> ${bookingDetails.customer.name}</p>
+            <p><strong>Phone:</strong> ${bookingDetails.customer.phone}</p>
+            <p><strong>Email:</strong> ${bookingDetails.customer.email}</p>
+            <p><strong>Address:</strong> ${bookingDetails.customer.address}</p>
+            <div style="margin-top:50px;text-align:center;color:#666;font-size:13px;">Thank you for choosing LocalConnect!<br>This is a computer generated receipt.</div>
+        `;
+
+        const opt = {
+            margin: [0.5, 0.5, 0.5, 0.5],
+            filename: 'LocalConnect_' + bookingDetails.category + '_Booking_' + bookingDetails.bookingId + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    function confirmBooking() {
+        if (!selectedProvider) { Swal.fire('Error', 'Please select a provider!', 'error'); return; }
+        const selectedAreaValue = document.getElementById('areaInput').value;
+        if (!selectedAreaValue.trim()) { Swal.fire('Error', 'Please select your area!', 'error'); return; }
+        if (selectedServices.length === 0) { Swal.fire('Error', 'Please select service!', 'error'); return; }
+
+        let bookingId = 'LC-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+
+        fetch("save_booking.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                service: selectedServices[0]?.name || "",
+                provider: selectedProvider?.name || "",
+                date: selectedDate || "",
+                time: selectedTime || "",
+                name: document.getElementById('customerName').value,
+                phone: document.getElementById('customerPhone').value,
+                email: document.getElementById('customerEmail').value,
+                address: document.getElementById('customerAddress').value,
+                area: document.getElementById('areaInput').value || "",
+                description: document.getElementById('description').value || ""
+            })
+        })
+        .then(function(res) { return res.text(); })
+        .then(function(data) {
+            console.log("SERVER RESPONSE:", data);
+            if (data.includes("success")) {
+                let bookingDetails = {
+                    bookingId: bookingId,
+                    services: selectedServices,
+                    provider: selectedProvider,
+                    date: selectedDate,
+                    time: selectedTime,
+                    category: currentCategory,
+                    customer: {
+                        name: document.getElementById('customerName').value,
+                        phone: document.getElementById('customerPhone').value,
+                        email: document.getElementById('customerEmail').value,
+                        address: document.getElementById('customerAddress').value
+                    }
+                };
+                Swal.fire({ title: '🎉 Your Service is Confirmed!', html: 'Booking ID: <strong>' + bookingId + '</strong><br>Date: ' + selectedDate + ' at ' + selectedTime, icon: 'success', showCancelButton: true, confirmButtonText: '📄 Download Receipt', cancelButtonText: 'Close', confirmButtonColor: '#3366FF' }).then(function(result) {
+                    if (result.isConfirmed) { downloadPDF(bookingDetails); }
+                    localStorage.removeItem('selectedServices');
+                    localStorage.removeItem('bookingCategory');
+                    localStorage.removeItem('selectedCategory');
+                    setTimeout(function() { window.location.href = 'my_bookings.php'; }, 800);
+                });
+            } else { Swal.fire('Error', 'Booking failed: ' + data, 'error'); }
+        })
+        .catch(function(err) { console.log("FETCH ERROR:", err); Swal.fire('Error', 'Network error!', 'error'); });
+    }
+
+    // Event Listeners
+    document.getElementById('areaInput').addEventListener('change', function() {
+        if (this.value !== "") { renderProviders(currentCategory, this.value); } 
+        else { document.getElementById('providersSection').style.display = 'none'; }
+    });
+    document.getElementById('changeProviderBtn').addEventListener('click', function() {
+        selectedProvider = null;
+        document.getElementById('selectedProviderSection').style.display = 'none';
+        var currentArea = document.getElementById('areaInput').value;
+        if (currentArea && currentArea !== "" && currentCategory) { renderProviders(currentCategory, currentArea); } 
+        else { document.getElementById('providersSection').style.display = 'block'; }
+    });
+    document.getElementById('backArrowBtn').addEventListener('click', function() {
+        var prev = localStorage.getItem('previousServicePage') || 'dashboard.html';
+        window.location.href = prev;
+    });
+    document.getElementById('confirmBtn').addEventListener('click', confirmBooking);
+    var fields = ['customerName', 'customerPhone', 'customerEmail', 'customerAddress'];
+    for(var i = 0; i < fields.length; i++) {
+        document.getElementById(fields[i]).addEventListener('input', updateConfirmButton);
+    }
+
+    // Initialize
+    currentCategory = getCategoryFromPreviousPage();
+    loadSelectedServices();
+    initDatePicker();
+    initTimeSlots();
+</script>
+</body>
+</html>

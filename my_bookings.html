@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>My Bookings | Local Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideInDown 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Glitter Effect on Header */
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,215,0,0.1) 50%, 
+                transparent 70%);
+            animation: glitter 3s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes glitter {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: #333;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 i {
+            color: #667eea;
+            margin-right: 10px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .btn-dashboard, .btn-logout {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .btn-dashboard {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-dashboard:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(220,53,69,0.4);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            animation: fadeInScale 0.5s ease-out backwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Glitter effect on stat cards */
+        .stat-card::before {
+            content: '✨';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 30px;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover::before {
+            opacity: 0.5;
+            transform: rotate(20deg);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 30px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover h3 {
+            transform: scale(1.1);
+            color: #764ba2;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Bookings Grid */
+        .bookings-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .booking-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: slideInRight 0.5s ease-out backwards;
+            position: relative;
+        }
+
+        .booking-card:nth-child(1) { animation-delay: 0.1s; }
+        .booking-card:nth-child(2) { animation-delay: 0.2s; }
+        .booking-card:nth-child(3) { animation-delay: 0.3s; }
+        .booking-card:nth-child(4) { animation-delay: 0.4s; }
+        .booking-card:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Sparkle effect on booking cards */
+        .booking-card::after {
+            content: '⭐';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .booking-card:hover::after {
+            opacity: 0.6;
+            transform: rotate(360deg) scale(1.2);
+            transition: all 0.5s;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+        }
+
+        /* Booking Header */
+        .booking-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Glitter effect on header */
+        .booking-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 40%, 
+                rgba(255,255,255,0.3) 50%, 
+                transparent 60%);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .booking-id {
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .booking-id i {
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .status-pending {
+            background: #FEF3C7;
+            color: #B45309;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .status-confirmed {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        .status-completed {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        /* Booking Body */
+        .booking-body {
+            padding: 20px 25px;
+            transition: all 0.3s;
+        }
+
+        .service-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #555;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .info-item:hover {
+            transform: translateX(5px);
+            color: #667eea;
+        }
+
+        .info-item i {
+            color: #667eea;
+            width: 20px;
+            transition: all 0.3s;
+        }
+
+        .info-item:hover i {
+            transform: scale(1.2);
+        }
+
+        /* Rating Section */
+        .rating-section {
+            background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 10px;
+            animation: glow 2s ease-in-out;
+            transition: all 0.3s;
+        }
+
+        .rating-section:hover {
+            box-shadow: 0 5px 15px rgba(102,126,234,0.2);
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 0 0 rgba(102,126,234,0.4); }
+            100% { box-shadow: 0 0 0 10px rgba(102,126,234,0); }
+        }
+
+        .rating-stars {
+            color: #FBBF24;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            animation: starPulse 1s ease-in-out;
+        }
+
+        @keyframes starPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .review-text {
+            color: #333;
+            font-style: italic;
+            margin: 8px 0;
+            padding-left: 10px;
+            border-left: 3px solid #667eea;
+        }
+
+        /* Reply Box */
+        .reply-box {
+            background: #EFF6FF;
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-top: 12px;
+            border-left: 4px solid #667eea;
+            animation: slideInLeft 0.4s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .reply-box i {
+            color: #667eea;
+            margin-right: 8px;
+        }
+
+        .reply-box strong {
+            color: #667eea;
+            font-size: 0.85rem;
+        }
+
+        .reply-box p {
+            margin-top: 8px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        /* Rate Button */
+        .rate-btn {
+            background: linear-gradient(135deg, #FF9800, #FF5722);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rate-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .rate-btn:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        .rate-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 87, 34, 0.4);
+        }
+
+        .rated-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            animation: checkmark 0.5s ease-out;
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 20px;
+            color: #999;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #FEF2F2;
+            color: #DC2626;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .service-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1><i class="fas fa-history"></i> My Booking History</h1>
+        <div>
+            <button class="btn-dashboard" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+            <button class="btn-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3 id="totalBookings">0</h3>
+            <p>Total Bookings</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="pendingBookings">0</h3>
+            <p>Pending</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="completedBookings">0</h3>
+            <p>Completed</p>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" id="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> <span id="errorText"></span>
+    </div>
+
+    <!-- Bookings List -->
+    <div id="bookingsList" class="bookings-grid">
+        <div class="loading">
+            <i class="fas fa-spinner fa-pulse"></i> Loading your bookings...
+        </div>
+    </div>
+</div>
+
+<script>
+    const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('user_email');
+    
+    if (!userEmail) {
+        window.location.href = "login.html";
+    }
+
+    let userRatings = {};
+
+    function goBack() {
+        window.location.href = "dashboard_new.html";
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "login.html";
+    }
+
+    function getStatusClass(status) {
+        switch(status) {
+            case 'pending': return 'status-pending';
+            case 'confirmed': return 'status-confirmed';
+            case 'completed': return 'status-completed';
+            default: return 'status-pending';
+        }
+    }
+
+    function getStatusText(status) {
+        switch(status) {
+            case 'pending': return 'Pending';
+            case 'confirmed': return 'Confirmed';
+            case 'completed': return 'Completed';
+            default: return status;
+        }
+    }
+
+    function formatDate(dateStr) {
+        if(!dateStr || dateStr === '0000-00-00') return 'Date not set';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function getStarRating(rating) {
+        const fullStars = Math.floor(rating);
+        const emptyStars = 5 - fullStars;
+        return '★'.repeat(fullStars) + '☆'.repeat(emptyStars);
+    }
+
+    // Fetch user's ratings and replies
+    async function loadUserRatings() {
+        try {
+            const response = await fetch(`get_user_ratings.php?email=${encodeURIComponent(userEmail)}`);
+            const ratings = await response.json();
+            
+            if (!ratings.error && Array.isArray(ratings)) {
+                ratings.forEach(r => {
+                    userRatings[r.booking_id] = {
+                        rating: r.rating,
+                        review_text: r.review_text,
+                        reply: r.reply,
+                        created_at: r.created_at
+                    };
+                });
+            }
+        } catch(error) {
+            console.error("Error loading ratings:", error);
+        }
+    }
+
+    async function loadBookings() {
+        showError(false);
+        
+        try {
+            // First load user ratings
+            await loadUserRatings();
+            
+            const response = await fetch(`get_user_bookings.php?email=${encodeURIComponent(userEmail)}`);
+            const data = await response.json();
+            
+            console.log("Bookings data:", data);
+            
+            if (data.error) {
+                showError(data.error, true);
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                document.getElementById('bookingsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times" style="font-size: 48px; color: #ccc;"></i>
+                        <p style="margin-top: 15px;">No bookings found.</p>
+                        <button class="btn-dashboard" onclick="goBack()" style="margin-top: 15px;">
+                            Book a Service
+                        </button>
+                    </div>
+                `;
+                updateStats([]);
+                return;
+            }
+            
+            updateStats(data);
+            renderBookings(data);
+            
+        } catch(error) {
+            console.error("Error:", error);
+            showError("Network error! Please check your connection.", true);
+        }
+    }
+
+    function updateStats(bookings) {
+        const total = bookings.length;
+        const pending = bookings.filter(b => b.status === 'pending').length;
+        const completed = bookings.filter(b => b.status === 'completed').length;
+        
+        document.getElementById('totalBookings').innerText = total;
+        document.getElementById('pendingBookings').innerText = pending;
+        document.getElementById('completedBookings').innerText = completed;
+    }
+
+    function renderBookings(bookings) {
+        let html = '';
+        
+        for (let booking of bookings) {
+            const rating = userRatings[booking.id];
+            const hasRated = !!rating;
+            const isCompleted = booking.status === 'completed';
+            
+            html += `
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <span class="booking-id">
+                            <i class="fas fa-ticket-alt"></i> Booking #${booking.id}
+                        </span>
+                        <span class="status-badge ${getStatusClass(booking.status)}">
+                            ${getStatusText(booking.status)}
+                        </span>
+                    </div>
+                    
+                    <div class="booking-body">
+                        <div class="service-info">
+                            <div class="info-item">
+                                <i class="fas fa-tools"></i>
+                                <span>${escapeHtml(booking.service_name || 'N/A')}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-user-tie"></i>
+                                <span>${escapeHtml(booking.provider_name || 'N/A')}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>${formatDate(booking.booking_date)}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-clock"></i>
+                                <span>${escapeHtml(booking.booking_time || 'N/A')}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${escapeHtml(booking.area || 'N/A')}</span>
+                            </div>
+                        </div>
+            `;
+            
+            // Show rating section if user has rated
+            if (hasRated) {
+                html += `
+                    <div class="rating-section">
+                        <div class="rating-stars">
+                            ${getStarRating(rating.rating)} (${rating.rating}/5)
+                        </div>
+                        <div class="review-text">
+                            "${escapeHtml(rating.review_text || 'No comment provided')}"
+                        </div>
+                `;
+                
+                // Show provider reply if exists
+                if (rating.reply && rating.reply.trim() !== '') {
+                    html += `
+                        <div class="reply-box">
+                            <i class="fas fa-reply"></i>
+                            <strong>Provider's Reply:</strong>
+                            <p>${escapeHtml(rating.reply)}</p>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+                html += `<div class="rated-badge"><i class="fas fa-check-circle"></i> Already Rated</div>`;
+            }
+            
+            // Show rate button if completed and not rated
+            if (isCompleted && !hasRated) {
+                html += `
+                    <button class="rate-btn" onclick="rateBooking(${booking.id})">
+                        <i class="fas fa-star"></i> Rate this Service
+                    </button>
+                `;
+            }
+            
+            html += `</div></div>`;
+        }
+        
+        document.getElementById('bookingsList').innerHTML = html;
+    }
+
+    function rateBooking(bookingId) {
+        window.location.href = `rate_service.html?booking_id=${bookingId}`;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showError(message, show) {
+        const errorDiv = document.getElementById('errorMessage');
+        if (show) {
+            document.getElementById('errorText').innerText = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        } else {
+            errorDiv.style.display = 'none';
+        }
+    }
+
+    // Load bookings on page load
+    document.addEventListener('DOMContentLoaded', loadBookings);
+</script>
+</body>
+</html>

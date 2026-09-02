@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrical Services · LocalConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #D6E4FF 0%, #84A9FF 100%);
+            min-height: 100vh;
+            color: #1A2E55;
+            padding: 20px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .close-dashboard {
+            position: fixed;
+            top: 25px;
+            right: 30px;
+            background: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 18px rgba(26, 46, 85, 0.2);
+            color: #1A2E55;
+            font-size: 1.8rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            z-index: 999;
+            border: 2px solid rgba(51, 102, 255, 0.2);
+        }
+
+        .close-dashboard:hover {
+            background: #3366FF;
+            color: white;
+            transform: scale(1.1);
+            border-color: white;
+            box-shadow: 0 10px 22px rgba(26, 46, 85, 0.3);
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .page-header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #1A2E55;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 12px;
+        }
+
+        .page-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #3366FF, #FFD700);
+            border-radius: 5px;
+        }
+
+        .page-header p {
+            font-size: 1.15rem;
+            color: #1A2E55;
+            max-width: 700px;
+            margin: 15px auto 0;
+            line-height: 1.5;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 22px rgba(26, 46, 85, 0.1);
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid rgba(51, 102, 255, 0.1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .service-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 20px 30px rgba(26, 46, 85, 0.2);
+            border-color: #3366FF;
+        }
+
+        .service-card.selected {
+            border: 3px solid #3366FF;
+            box-shadow: 0 0 0 5px rgba(51, 102, 255, 0.2);
+            background: #F8FAFF;
+        }
+
+        .selected-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #3366FF;
+            color: white;
+            border-radius: 30px;
+            padding: 5px 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 10;
+            display: none;
+        }
+
+        .service-card.selected .selected-badge {
+            display: block;
+        }
+
+        .card-img {
+            height: 300px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .service-card:hover .card-img img {
+            transform: scale(1.1);
+        }
+
+        .card-img::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+            z-index: 1;
+        }
+
+        .service-icon {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            z-index: 2;
+            color: white;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card-content {
+            padding: 20px 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .card-content h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: #1A2E55;
+            font-weight: 600;
+            border-left: 5px solid #3366FF;
+            padding-left: 12px;
+        }
+
+        .card-content p {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .service-features {
+            list-style: none;
+            margin-bottom: 20px;
+            padding: 0;
+        }
+
+        .service-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            color: #1A2E55;
+            font-size: 0.85rem;
+        }
+
+        .service-features li i {
+            color: #3366FF;
+            margin-right: 8px;
+            font-size: 0.95rem;
+            width: 18px;
+        }
+
+        .btn-book {
+            background: linear-gradient(135deg, #3366FF, #1A2E55);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 5px 12px rgba(51, 102, 255, 0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-top: auto;
+            font-size: 0.95rem;
+        }
+
+        .btn-book:hover {
+            background: linear-gradient(135deg, #1A2E55, #3366FF);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(26, 46, 85, 0.4);
+            color: white;
+        }
+
+        .service-card.selected .btn-book {
+            background: #28a745;
+            box-shadow: 0 5px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .why-choose {
+            margin-top: 70px;
+            background: white;
+            border-radius: 30px;
+            padding: 45px 25px;
+            box-shadow: 0 15px 30px rgba(26, 46, 85, 0.1);
+        }
+
+        .why-choose h2 {
+            text-align: center;
+            font-size: 2.1rem;
+            margin-bottom: 35px;
+            color: #1A2E55;
+            position: relative;
+        }
+
+        .why-choose h2::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 4px;
+            background: #3366FF;
+            border-radius: 2px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 20px 15px;
+            border-radius: 15px;
+            background: #F5F9FF;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 22px rgba(51, 102, 255, 0.15);
+        }
+
+        .feature-item i {
+            font-size: 2.8rem;
+            color: #3366FF;
+            margin-bottom: 12px;
+        }
+
+        .feature-item h4 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: #1A2E55;
+        }
+
+        .feature-item p {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* Floating Booking Button */
+        .floating-booking-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #3366FF, #1A2E55);
+            color: white;
+            padding: 16px 28px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            z-index: 1000;
+            text-decoration: none;
+            border: none;
+            font-weight: bold;
+        }
+
+        .floating-booking-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(51, 102, 255, 0.4);
+        }
+
+        .floating-booking-btn .count {
+            background: white;
+            color: #3366FF;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .close-dashboard {
+                top: 15px;
+                right: 18px;
+                width: 42px;
+                height: 42px;
+                font-size: 1.5rem;
+            }
+            .page-header h1 {
+                font-size: 2.2rem;
+            }
+            .floating-booking-btn {
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cross Button to go back to dashboard -->
+    <a href="javascript:void(0)" class="close-dashboard" id="backToDashboardBtn" title="Back to Dashboard">
+        <i class="fas fa-times"></i>
+    </a>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>⚡ Professional Electrical Services</h1>
+            <p>From wiring upgrades to smart installations – our licensed electricians ensure safety, efficiency, and reliability for all your electrical needs.</p>
+        </div>
+
+        <div class="service-grid" id="servicesGrid"></div>
+
+        <div class="why-choose">
+            <h2>Why Choose Our Electricians?</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <i class="fas fa-certificate"></i>
+                    <h4>Licensed & Insured</h4>
+                    <p>Fully certified electricians</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-clock"></i>
+                    <h4>On‑Time Guarantee</h4>
+                    <p>We respect your schedule</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-microscope"></i>
+                    <h4>Advanced Diagnostics</h4>
+                    <p>Thermal imaging & testing</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <h4>Upfront Pricing</h4>
+                    <p>No hidden charges</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Booking Button -->
+    <a href="#" onclick="goToBooking(); return false;" class="floating-booking-btn" id="bookingBtnLink">
+        <i class="fas fa-calendar-check"></i>
+        <span>View Booking</span>
+        <span class="count" id="selectedCount">0</span>
+    </a>
+
+    <script>
+        // Save current page name for back button functionality
+        localStorage.setItem('previousServicePage', window.location.pathname.split('/').pop() || 'electrical.html');
+        localStorage.setItem('bookingCategory', 'Electrical');
+
+        // Services Data
+        const services = [
+            {
+                id: 1,
+                name: "Wiring & Rewiring",
+                description: "Safe, code-compliant wiring for new builds or older homes. Replace outdated systems with modern copper wiring.",
+                image: "https://i.pinimg.com/736x/67/30/09/67300966eb7b122e4e73f9ba9e7e11be.jpg",
+                features: ["Whole-house rewiring", "Surge protection", "Certified inspections"]
+            },
+            {
+                id: 2,
+                name: "Lighting Installation",
+                description: "LED retrofits, chandeliers, outdoor lighting, and smart dimmers – we bring your vision to light.",
+                image: "https://i.pinimg.com/1200x/5e/50/ad/5e50ad11e5907eb2bc8a33556263503f.jpg",
+                features: ["Energy-saving LEDs", "Motion sensors", "Custom designs"]
+            },
+            {
+                id: 3,
+                name: "Panel & Breaker Upgrades",
+                description: "Upgrade to modern breaker panels for increased capacity, safety, and compatibility with EV chargers.",
+                image: "https://i.pinimg.com/1200x/c4/54/bc/c454bc842553c654b52bdcb8e82d0d11.jpg",
+                features: ["100A–400A upgrades", "AFCI/GFCI protection", "Surge arrestors"]
+            },
+            {
+                id: 4,
+                name: "Appliance & Outlet Installation",
+                description: "Dedicated circuits for ovens, dryers, ACs, and new outlets – installed safely and neatly.",
+                image: "https://i.pinimg.com/1200x/3b/d7/65/3bd765909ef890a4d28fdb1da5791dda.jpg",
+                features: ["240V circuits", "GFCI/AFCI outlets", "Outdoor & garage"]
+            },
+            {
+                id: 5,
+                name: "Safety & Code Inspection",
+                description: "Thermal imaging, grounding checks, and comprehensive electrical audits to ensure your home is safe.",
+                image: "https://i.pinimg.com/736x/9b/18/96/9b1896cdda4a71c20a7c812d170b48a9.jpg",
+                features: ["Pre-purchase inspection", "Thermal fault detection", "Detailed reports"]
+            },
+            {
+                id: 6,
+                name: "24/7 Emergency Repairs",
+                description: "Power outages, sparking outlets, or burnt wires – our rapid-response team is ready anytime.",
+                image: "https://i.pinimg.com/736x/79/9e/57/799e5758dcdd313e42a853e40c277a38.jpg",
+                features: ["24/7/365 availability", "No overtime charges", "Fully stocked vans"]
+            }
+        ];
+
+        let selectedServices = [];
+
+        // Load from localStorage
+        function loadSelectedServices() {
+            const saved = localStorage.getItem('selectedServices');
+            if (saved) {
+                selectedServices = JSON.parse(saved);
+            }
+            updateCount();
+            updateCardsSelection();
+        }
+
+        // Save to localStorage
+        function saveSelectedServices() {
+            localStorage.setItem('selectedServices', JSON.stringify(selectedServices));
+            updateCount();
+            updateCardsSelection();
+        }
+
+        // Update floating button count
+        function updateCount() {
+            const countSpan = document.getElementById('selectedCount');
+            countSpan.innerText = selectedServices.length;
+        }
+
+        // Update cards selection visual
+        function updateCardsSelection() {
+            document.querySelectorAll('.service-card').forEach(card => {
+                const id = parseInt(card.dataset.id);
+                if (selectedServices.find(s => s.id === id)) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        // Toggle service selection
+        function toggleService(serviceId) {
+            const index = selectedServices.findIndex(s => s.id === serviceId);
+            
+            if (index !== -1) {
+                selectedServices.splice(index, 1);
+            } else {
+                const service = services.find(s => s.id === serviceId);
+                selectedServices.push({...service});
+            }
+            
+            saveSelectedServices();
+        }
+
+        // Render services
+        function renderServices() {
+            const grid = document.getElementById('servicesGrid');
+            grid.innerHTML = services.map(service => `
+                <div class="service-card" data-id="${service.id}" onclick="toggleService(${service.id})">
+                    <div class="selected-badge">
+                        <i class="fas fa-check-circle"></i> Selected
+                    </div>
+                    <div class="card-img">
+                        <img src="${service.image}" alt="${service.name}">
+                        <div class="service-icon"><i class="fas fa-bolt"></i></div>
+                    </div>
+                    <div class="card-content">
+                        <h3>${service.name}</h3>
+                        <p>${service.description}</p>
+                        <ul class="service-features">
+                            ${service.features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+                        </ul>
+                        <button class="btn-book">
+                            ${selectedServices.find(s => s.id === service.id) ? '✓ Selected' : 'Book Now →'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateCardsSelection();
+        }
+
+        // Back to dashboard functionality
+        document.getElementById('backToDashboardBtn').addEventListener('click', function() {
+            window.location.href = 'dashboard_new_connected.php';
+        });
+
+        // Initialize
+        renderServices();
+        loadSelectedServices();
+    </script>
+
+    <script>
+    // Inject session email into booking link if available
+    (function() {
+        var link = document.getElementById('bookingBtnLink') || document.querySelector('.floating-booking-btn');
+        if (link) {
+            var currentHref = link.getAttribute('href') || 'booking.html';
+            if (!currentHref.includes('category=')) {
+                currentHref = 'booking.html?category=Electrical';
+            }
+            link.setAttribute('href', currentHref);
+        }
+        // Set category in localStorage
+        localStorage.setItem('bookingCategory', 'Electrical');
+        localStorage.setItem('selectedCategory', 'Electrical');
+    })();
+    
+    function goToBooking() {
+        // Check PHP session via fetch
+        fetch('check_user_session.php')
+            .then(r => r.text())
+            .then(status => {
+                if (status.trim() === 'logged_in') {
+                    window.location.href = 'booking.html?category=Electrical';
+                } else {
+                    // Not logged in — go to dashboard login page
+                    window.location.href = 'dashboard_new_connected.php?require_login=1';
+                }
+            })
+            .catch(() => {
+                window.location.href = 'dashboard_new_connected.php?require_login=1';
+            });
+    }
+
+    </script>
+
+    <script>
+    // When back button is pressed, go to main dashboard
+    window.addEventListener('pageshow', function() {
+        history.pushState(null, '', window.location.href);
+    });
+    window.addEventListener('popstate', function() {
+        window.location.replace('dashboard_new_connected.php');
+    });
+    </script>
+</body>
+</html>

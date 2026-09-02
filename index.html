@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Services</title>
+</head>
+<body>
+
+<h2>Available Services</h2>
+<ul id="serviceList"></ul>
+
+<script>
+fetch("http://localhost/local-service/getServices.php")
+  .then(res => res.json())
+  .then(data => {
+    let list = document.getElementById("serviceList");
+
+    data.forEach(service => {
+      let li = document.createElement("li");
+      li.innerText = service.service_name + " - Rs " + service.price;
+      list.appendChild(li);
+    });
+  });
+</script>
+
+</body>
+</html>

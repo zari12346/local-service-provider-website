@@ -1,0 +1,25 @@
+2026-05-16 10:46:21 - ID: 47, Status: confirmed
+2026-05-16 10:46:21 - ID: 47, Status: confirmed
+Status is confirmed, trying to insert notification
+Customer email from provider_bookings: wordpresstk@gmail.com
+NOTIFICATION INSERTED SUCCESSFULLY for wordpresstk@gmail.com
+2026-05-16 19:57:28 - ID: 48, Status: confirmed
+2026-05-16 19:57:28 - ID: 48, Status: confirmed
+Status is confirmed, trying to insert notification
+Customer email from provider_bookings: hizra345@gmail.com
+NOTIFICATION INSERTED SUCCESSFULLY for hizra345@gmail.com
+2026-05-16 20:16:22 - ID: 49, Status: confirmed
+2026-05-16 20:16:22 - ID: 49, Status: confirmed
+Status is confirmed, trying to insert notification
+Customer email from provider_bookings: aneeza@gmail.com
+NOTIFICATION INSERTED SUCCESSFULLY for aneeza@gmail.com
+2026-05-16 20:19:33 - ID: 50, Status: confirmed
+2026-05-16 20:19:33 - ID: 50, Status: confirmed
+Status is confirmed, trying to insert notification
+Customer email from provider_bookings: aneeza@gmail.com
+NOTIFICATION INSERTED SUCCESSFULLY for aneeza@gmail.com
+2026-05-16 20:27:10 - ID: 51, Status: confirmed
+2026-05-16 20:27:10 - ID: 51, Status: confirmed
+Status is confirmed, trying to insert notification
+Customer email from provider_bookings: aneeza@gmail.com
+NOTIFICATION INSERTED SUCCESSFULLY for aneeza@gmail.com

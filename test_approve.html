@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Test Approve</h2>
+    <button onclick="approve()">Approve ID 10</button>
+    <pre id="result"></pre>
+
+    <script>
+        function approve() {
+            fetch("http://localhost/local-service/update_provider_status.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "id=10&status=approved"
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+                if(data.success) {
+                    alert("✅ Approved successfully!");
+                } else {
+                    alert("❌ Error: " + data.error);
+                }
+            })
+            .catch(err => {
+                document.getElementById('result').innerHTML = "Error: " + err;
+            });
+        }
+    </script>
+</body>
+</html>

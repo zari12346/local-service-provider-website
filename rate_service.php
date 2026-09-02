@@ -1,0 +1,330 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_email'])) {
+    header('Location: dashboard_new_connected.php');
+    exit();
+}
+$userEmail = $_SESSION['user_email'];
+$userName  = $_SESSION['user_name'] ?? 'User';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Your Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .rating-container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        
+        .service-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 20px;
+            margin: 25px 0;
+            text-align: left;
+        }
+        
+        .service-info p {
+            margin: 8px 0;
+            color: #555;
+        }
+        
+        .service-info i {
+            color: #667eea;
+            width: 25px;
+        }
+        
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 30px 0;
+        }
+        
+        .star {
+            font-size: 55px;
+            cursor: pointer;
+            color: #ddd;
+            transition: all 0.2s;
+        }
+        
+        .star:hover,
+        .star.active {
+            color: #ffc107;
+            transform: scale(1.1);
+        }
+        
+        .rating-text {
+            font-size: 20px;
+            margin: 15px 0;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .review-text {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            margin: 20px 0;
+        }
+        
+        .review-text:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="rating-container">
+        <h1>⭐ Rate Your Service</h1>
+        <p>Your feedback helps us improve!</p>
+        
+        <div class="service-info" id="serviceInfo">
+            <p><i class="fas fa-spinner fa-pulse"></i> Loading booking details...</p>
+        </div>
+        
+        <div class="rating-text" id="ratingText">Select a rating</div>
+        
+        <div class="stars" id="stars">
+            <i class="far fa-star star" data-value="1"></i>
+            <i class="far fa-star star" data-value="2"></i>
+            <i class="far fa-star star" data-value="3"></i>
+            <i class="far fa-star star" data-value="4"></i>
+            <i class="far fa-star star" data-value="5"></i>
+        </div>
+        
+        <textarea class="review-text" id="reviewText" rows="4" placeholder="Share your experience with this provider... (Optional)"></textarea>
+        
+        <button class="btn-submit" id="submitBtn" onclick="submitReview()">
+            <i class="fas fa-paper-plane"></i> Submit Review
+        </button>
+        
+        <a href="my_bookings.php" class="back-link">← Back to My Bookings</a>
+        
+        <div id="message"></div>
+    </div>
+    
+    <script>
+        // Get booking ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = urlParams.get('booking_id');
+        const userEmail = <?php echo json_encode($userEmail); ?>;
+        
+        if (!bookingId) {
+            document.getElementById('serviceInfo').innerHTML = '<p style="color:red;">❌ No booking ID found</p>';
+        }
+        
+        let selectedRating = 0;
+        
+        // Load booking details
+        async function loadBookingDetails() {
+            try {
+                const response = await fetch(`get_booking_details.php?id=${bookingId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('serviceInfo').innerHTML = `
+                        <p><i class="fas fa-tools"></i> <strong>Service:</strong> ${data.service_name}</p>
+                        <p><i class="fas fa-user-tie"></i> <strong>Provider:</strong> ${data.provider_name}</p>
+                        <p><i class="fas fa-calendar"></i> <strong>Date:</strong> ${data.booking_date}</p>
+                        <p><i class="fas fa-clock"></i> <strong>Booking ID:</strong> #${data.id}</p>
+                    `;
+                } else {
+                    document.getElementById('serviceInfo').innerHTML = `<p style="color:red;">❌ ${data.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('serviceInfo').innerHTML = '<p style="color:red;">❌ Error loading booking details</p>';
+            }
+        }
+        
+        // Star rating system
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.value);
+                
+                // Update stars display
+                stars.forEach((s, index) => {
+                    if (index < selectedRating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                        s.classList.remove('active');
+                    }
+                });
+                
+                // Update rating text
+                const ratingText = document.getElementById('ratingText');
+                if (selectedRating === 5) ratingText.innerHTML = '⭐ Excellent! ⭐⭐⭐⭐⭐';
+                else if (selectedRating === 4) ratingText.innerHTML = '👍 Good! ⭐⭐⭐⭐';
+                else if (selectedRating === 3) ratingText.innerHTML = '👌 Average ⭐⭐⭐';
+                else if (selectedRating === 2) ratingText.innerHTML = '👎 Below Average ⭐⭐';
+                else if (selectedRating === 1) ratingText.innerHTML = '😞 Poor ⭐';
+            });
+        });
+        
+        // Submit review
+        async function submitReview() {
+            if (selectedRating === 0) {
+                showMessage('Please select a rating!', 'error');
+                return;
+            }
+            
+            const reviewText = document.getElementById('reviewText').value;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
+            
+            const data = {
+                booking_id: parseInt(bookingId),
+                rating: selectedRating,
+                review_text: reviewText,
+                user_email: userEmail
+            };
+            
+            try {
+                const response = await fetch('save_review.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message + ' Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'my_bookings.php';
+                    }, 2000);
+                } else {
+                    showMessage(result.error, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+                }
+            } catch (error) {
+                showMessage('Network error! Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+            }
+        }
+        
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+            messageDiv.className = `message ${type}`;
+            
+            setTimeout(() => {
+                messageDiv.className = 'message';
+            }, 3000);
+        }
+        
+        // Load page
+        loadBookingDetails();
+    </script>
+</body>
+</html>
